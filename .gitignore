@@ -1,0 +1,30 @@
+# .NET build artifacts
+bin/
+obj/
+out/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+.idea/
+.vscode/
+
+# Test results & coverage
+TestResults/
+coverage/
+*.trx
+*.coverage
+
+# Local environment & tooling state
+.devenv/
+.direnv/
+.devspace/
+kubeconfig.yaml
+*.log
+.env
+.env.local
+
+# OS files
+Thumbs.db
+.DS_Store
