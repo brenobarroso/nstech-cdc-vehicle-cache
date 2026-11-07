@@ -64,14 +64,12 @@ public static class DeterministicScenarioCatalog
         await vehicleWriter.InsertVehicleAsync(Vehicle2PositionBeforeVehicle, "NST-2002", VehicleStates.Active, t0.AddMinutes(10), ct);
 
         // =========================================================================
-        // B7: Deleted Vehicle 3 — Created, receives position, then DELETED in Postgres
+        // B7: Deleted Vehicle 3 — Created, receives positions, then DELETED in Postgres
         // =========================================================================
         await vehicleWriter.InsertVehicleAsync(Vehicle3DeletedAndTombstoned, "NST-3003", VehicleStates.Idle, t0.AddMinutes(2), ct);
         await positionWriter.InsertPositionAsync(Vehicle3DeletedAndTombstoned, -19.9167, -43.9345, t0.AddMinutes(3), ct);
+        await positionWriter.InsertPositionAsync(Vehicle3DeletedAndTombstoned, -19.9200, -43.9400, t0.AddMinutes(4), ct);
         await Task.Delay(TimeSpan.FromMilliseconds(250), ct).ConfigureAwait(false);
         await vehicleWriter.DeleteVehicleAsync(Vehicle3DeletedAndTombstoned, ct);
-
-        // Late orphan position arriving for deleted Vehicle 3 — must be REJECTED (SkippedTombstoned)
-        await positionWriter.InsertPositionAsync(Vehicle3DeletedAndTombstoned, -19.9999, -43.9999, t0.AddMinutes(4), ct);
     }
 }

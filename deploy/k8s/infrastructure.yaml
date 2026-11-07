@@ -236,7 +236,8 @@ spec:
     spec:
       containers:
         - name: worker
-          image: vehicle-cache-worker
+          image: vehicle-cache-worker:latest
+          imagePullPolicy: IfNotPresent
           env:
             - name: VehicleCache__KafkaBootstrapServers
               value: "kafka:29092"

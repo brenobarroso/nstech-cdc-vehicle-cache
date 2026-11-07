@@ -1,11 +1,6 @@
 version: v2beta1
 name: nstech-cdc-vehicle-cache
 
-images:
-  worker:
-    image: vehicle-cache-worker
-    dockerfile: ./Dockerfile
-
 deployments:
   cdc-stack:
     kubectl:
@@ -13,16 +8,19 @@ deployments:
         - deploy/k8s/infrastructure.yaml
 
 dev:
-  ports:
-    - imageSelector: postgres:16-alpine
-      forward:
-        - port: 5432
-    - imageSelector: valkey/valkey:8.0-alpine
-      forward:
-        - port: 6379
-    - imageSelector: apache/kafka:3.8.1
-      forward:
-        - port: 9092
-    - imageSelector: quay.io/debezium/connect:2.7.3.Final
-      forward:
-        - port: 8083
+  postgres:
+    imageSelector: postgres:16-alpine
+    ports:
+      - port: "5432:5432"
+  valkey:
+    imageSelector: valkey/valkey:8.0-alpine
+    ports:
+      - port: "6379:6379"
+  kafka:
+    imageSelector: apache/kafka:3.8.1
+    ports:
+      - port: "9092:9092"
+  debezium:
+    imageSelector: quay.io/debezium/connect:2.7.3.Final
+    ports:
+      - port: "8083:8083"

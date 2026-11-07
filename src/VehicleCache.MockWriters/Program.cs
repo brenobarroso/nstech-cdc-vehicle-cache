@@ -34,8 +34,13 @@ public static class Program
         var vehicleWriter = new PostgresVehicleWriter(postgresConn);
         var positionWriter = new PostgresPositionWriter(postgresConn);
 
+        using var mux = await ConnectionMultiplexer.ConnectAsync(valkeyConn);
+        var projector = new ValkeyLuaProjector(mux);
+
         Console.WriteLine("[1/6] Ensuring PostgreSQL schema (public.vehicles, public.positions)...");
         await vehicleWriter.EnsureSchemaAsync(ct);
+        await vehicleWriter.TruncateTablesAsync(ct);
+        await projector.FlushAllAsync(ct);
 
         Console.WriteLine("[2/6] Ensuring Debezium PostgreSQL connector is registered and RUNNING...");
         await EnsureDebeziumConnectorAsync(debzConnectUrl, ct);
@@ -43,14 +48,11 @@ public static class Program
         Console.WriteLine("[3/6] Executing deterministic SQL scenario sequence (B1..B7) via Mock Writers...");
         await DeterministicScenarioCatalog.ExecutePostgresSequenceAsync(vehicleWriter, positionWriter, ct);
 
-        using var mux = await ConnectionMultiplexer.ConnectAsync(valkeyConn);
-        var projector = new ValkeyLuaProjector(mux);
-
         Console.WriteLine("[4/6] Waiting for .NET 10 Worker to converge Valkey state (Snapshot A)...");
         var snapshotA = await WaitForConvergenceAsync(projector, ct);
         ValidateSnapshotAssertions(snapshotA, "Snapshot A (Initial Streaming Projection)");
 
-        Console.WriteLine("[5/6] Executing B8 Full Replay Test: Flushing Valkey & resetting Kafka offsets to 0...");
+        Console.WriteLine("[5/6] Executing B8 Full Replay Test: Flushing Valkey & replaying Kafka from offset 0...");
         await ReplayFromOffsetZeroDirectlyAsync(kafkaBootstrap, projector, ct);
 
         var snapshotB = await WaitForConvergenceAsync(projector, ct);
@@ -178,11 +180,12 @@ public static class Program
             projector,
             Microsoft.Extensions.Logging.Abstractions.NullLogger<VehicleCache.Infrastructure.Messaging.CdcEventDispatcher>.Instance);
 
-        // Replay both topics from Offset.Beginning (0) in a fresh replay consumer group
+        // Replay both topics concurrently from Offset.Beginning (0) in a fresh replay consumer group
         var replayGroup = $"vehicle-cache-replay-{Guid.NewGuid():N}";
 
-        await DrainTopicFromZeroAsync(kafkaBootstrap, $"{replayGroup}-vehicles", "cdc.public.vehicles", dispatcher.HandleVehiclePayloadAsync, ct);
-        await DrainTopicFromZeroAsync(kafkaBootstrap, $"{replayGroup}-positions", "cdc.public.positions", dispatcher.HandlePositionPayloadAsync, ct);
+        await Task.WhenAll(
+            DrainTopicFromZeroAsync(kafkaBootstrap, $"{replayGroup}-vehicles", "cdc.public.vehicles", dispatcher.HandleVehiclePayloadAsync, ct),
+            DrainTopicFromZeroAsync(kafkaBootstrap, $"{replayGroup}-positions", "cdc.public.positions", dispatcher.HandlePositionPayloadAsync, ct));
     }
 
     private static async Task DrainTopicFromZeroAsync(
