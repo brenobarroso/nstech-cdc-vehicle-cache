@@ -50,7 +50,7 @@ e2e:
 
 [windows]
 e2e:
-    $ErrorActionPreference = 'Stop'; $portsReady = $true; foreach ($p in @(5432, 6379, 9092, 8083)) { $c = New-Object System.Net.Sockets.TcpClient; try { $c.Connect('127.0.0.1', $p) } catch { $portsReady = $false } finally { $c.Dispose() } }; if (-not $portsReady) { Write-Host "Stack not yet active on localhost ports — invoking 'just up' automatically..."; just up }; $dotnet = if (Test-Path "$env:LOCALAPPDATA\Microsoft\dotnet\dotnet.exe") { "$env:LOCALAPPDATA\Microsoft\dotnet\dotnet.exe" } else { "dotnet" }; & $dotnet test VehicleCache.sln --configuration Release; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; & $dotnet run --project src/VehicleCache.MockWriters/VehicleCache.MockWriters.csproj --configuration Release; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    $ErrorActionPreference = 'Stop'; $portsReady = $true; foreach ($p in @(5432, 6379, 9092, 8083)) { $c = New-Object System.Net.Sockets.TcpClient; try { $c.Connect('127.0.0.1', $p) } catch { $portsReady = $false } finally { $c.Dispose() } }; if (-not $portsReady) { Write-Host "Stack not yet active on localhost ports — invoking 'just up' automatically..."; just up }; $dotnet = if (Test-Path "$env:LOCALAPPDATA\Microsoft\dotnet\dotnet.exe") { "$env:LOCALAPPDATA\Microsoft\dotnet\dotnet.exe" } else { "dotnet" }; $noBuild = if (Test-Path "$env:LOCALAPPDATA\VehicleCacheBuild\bin\VehicleCache.MockWriters\Release\net10.0\VehicleCache.MockWriters.dll") { "--no-build" } else { "" }; & $dotnet test VehicleCache.sln --configuration Release $noBuild; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; & $dotnet run --project src/VehicleCache.MockWriters/VehicleCache.MockWriters.csproj --configuration Release $noBuild; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Run fast deterministic unit tests (B1..B8 in-memory & parser verification)
 [unix]
@@ -59,7 +59,7 @@ test:
 
 [windows]
 test:
-    $ErrorActionPreference = 'Stop'; $dotnet = if (Test-Path "$env:LOCALAPPDATA\Microsoft\dotnet\dotnet.exe") { "$env:LOCALAPPDATA\Microsoft\dotnet\dotnet.exe" } else { "dotnet" }; & $dotnet test VehicleCache.sln; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    $ErrorActionPreference = 'Stop'; $dotnet = if (Test-Path "$env:LOCALAPPDATA\Microsoft\dotnet\dotnet.exe") { "$env:LOCALAPPDATA\Microsoft\dotnet\dotnet.exe" } else { "dotnet" }; $noBuild = if (Test-Path "$env:LOCALAPPDATA\VehicleCacheBuild\bin\VehicleCache.Tests\Debug\net10.0\VehicleCache.Tests.dll") { "--no-build" } else { "" }; & $dotnet test VehicleCache.sln $noBuild; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Tear down the local Kubernetes cluster and stop port-forwards
 [unix]
