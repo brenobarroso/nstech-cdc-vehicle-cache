@@ -159,6 +159,8 @@ spec:
               value: "0"
             - name: CLUSTER_ID
               value: "MkU3OEVBNTcwNTJENDM2Qk"
+            - name: KAFKA_HEAP_OPTS
+              value: "-Xms192m -Xmx320m"
           ports:
             - containerPort: 9092
             - containerPort: 29092
@@ -215,6 +217,8 @@ spec:
               value: "false"
             - name: CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE
               value: "false"
+            - name: HEAP_OPTS
+              value: "-Xms192m -Xmx320m"
           ports:
             - containerPort: 8083
 ---
