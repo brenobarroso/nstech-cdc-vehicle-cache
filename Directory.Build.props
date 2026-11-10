@@ -1,0 +1,17 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- When running on Windows with Smart App Control / OneDrive, disable unsigned native AppHost .exe generation
+       (so 'dotnet run' executes via Microsoft-signed dotnet.exe) and place build outputs in LocalAppData outside OneDrive. -->
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+    <UseAppHost>false</UseAppHost>
+    <BaseOutputPath Condition="$(MSBuildProjectDirectory.Contains('OneDrive'))">$(LOCALAPPDATA)\VehicleCacheBuild\bin\$(MSBuildProjectName)\</BaseOutputPath>
+    <BaseIntermediateOutputPath Condition="$(MSBuildProjectDirectory.Contains('OneDrive'))">$(LOCALAPPDATA)\VehicleCacheBuild\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>
