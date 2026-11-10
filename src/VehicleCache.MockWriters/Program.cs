@@ -101,25 +101,26 @@ public static class Program
             }
             """;
 
-        for (var attempt = 1; attempt <= 30; attempt++)
+        for (var attempt = 1; attempt <= 45; attempt++)
         {
             try
             {
                 var statusResp = await http.GetAsync("/connectors/logistics-postgres-cdc/status", ct);
                 if (statusResp.IsSuccessStatusCode)
                 {
-                    return;
+                    var statusJson = await statusResp.Content.ReadAsStringAsync(ct);
+                    if (statusJson.Contains("\"RUNNING\"", StringComparison.OrdinalIgnoreCase))
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(2), ct);
+                        return;
+                    }
                 }
-
-                var postResp = await http.PostAsync(
-                    "/connectors",
-                    new StringContent(connectorConfig, System.Text.Encoding.UTF8, "application/json"),
-                    ct);
-
-                if (postResp.IsSuccessStatusCode || (int)postResp.StatusCode == 409)
+                else
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(2), ct);
-                    return;
+                    await http.PostAsync(
+                        "/connectors",
+                        new StringContent(connectorConfig, System.Text.Encoding.UTF8, "application/json"),
+                        ct);
                 }
             }
             catch
