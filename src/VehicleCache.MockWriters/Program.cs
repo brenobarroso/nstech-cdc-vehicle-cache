@@ -69,7 +69,11 @@ public static class Program
 
     public static async Task EnsureDebeziumConnectorAsync(string connectBaseUrl, CancellationToken ct)
     {
-        using var http = new HttpClient { BaseAddress = new Uri(connectBaseUrl) };
+        using var http = new HttpClient
+        {
+            BaseAddress = new Uri(connectBaseUrl),
+            Timeout = TimeSpan.FromSeconds(10)
+        };
 
         var connectorConfig = """
             {
