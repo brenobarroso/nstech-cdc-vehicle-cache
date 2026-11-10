@@ -164,6 +164,11 @@ spec:
           ports:
             - containerPort: 9092
             - containerPort: 29092
+          readinessProbe:
+            tcpSocket:
+              port: 9092
+            initialDelaySeconds: 5
+            periodSeconds: 3
 ---
 apiVersion: v1
 kind: Service
@@ -221,6 +226,12 @@ spec:
               value: "-Xms192m -Xmx320m"
           ports:
             - containerPort: 8083
+          readinessProbe:
+            httpGet:
+              path: /connectors
+              port: 8083
+            initialDelaySeconds: 10
+            periodSeconds: 3
 ---
 apiVersion: apps/v1
 kind: Deployment
